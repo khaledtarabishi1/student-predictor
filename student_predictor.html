@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Student Performance Predictor</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #000000;
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+    .container {
+      background: #1a0033;
+      padding: 24px;
+      width: 100%;
+      max-width: 520px;
+      border-radius: 18px;
+      box-shadow: 0 25px 50px rgba(124, 58, 237, 0.35);
+    }
+    h1 {
+      text-align: center;
+      margin-bottom: 16px;
+      color: #e9d5ff;
+    }
+    label {
+      font-weight: bold;
+      margin-top: 12px;
+      display: block;
+      color: #d8b4fe;
+    }
+    select, input {
+      width: 100%;
+      padding: 10px;
+      margin-top: 6px;
+      border-radius: 10px;
+      border: 1px solid #5b21b6;
+      font-size: 14px;
+      background: #240046;
+      color: #f5f3ff;
+    }
+    button {
+      width: 100%;
+      padding: 12px;
+      margin-top: 20px;
+      border-radius: 12px;
+      border: none;
+      background: linear-gradient(135deg, #5b21b6, #3b0764);
+      color: #ffffff;
+      font-weight: bold;
+      cursor: pointer;
+    }
+    button:hover {
+      opacity: 0.9;
+    }
+    .result {
+      margin-top: 20px;
+      background: #240046;
+      padding: 16px;
+      border-radius: 12px;
+      display: none;
+      color: #f5f3ff;
+      white-space: pre-wrap;
+      font-family: Consolas, monospace;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Student Performance Predictor</h1>
+
+    <label>Education System</label>
+    <select id="system" onchange="renderSemesters()">
+      <option value="igcse">IGCSE (3 Semesters)</option>
+      <option value="national">National (2 Semesters)</option>
+    </select>
+
+    <div id="semesterInputs"></div>
+
+    <label>Daily Screen Time (hours)</label>
+    <input type="number" id="screenTime" min="0" />
+
+    <label>Does the student take extra courses?</label>
+    <select id="courses" onchange="toggleCourses()">
+      <option value="no">No</option>
+      <option value="yes">Yes</option>
+    </select>
+
+    <div id="courseHoursBox" style="display:none;">
+      <label>Course hours per week</label>
+      <input type="number" id="courseHours" min="0" />
+    </div>
+
+    <label>Any family or emotional problems?</label>
+    <select id="family">
+      <option value="no">No</option>
+      <option value="yes">Yes</option>
+    </select>
+
+    <button onclick="predict()">Generate Report</button>
+
+    <div class="result" id="result"></div>
+  </div>
+
+  <script>
+    function renderSemesters() {
+      const system = document.getElementById('system').value;
+      const container = document.getElementById('semesterInputs');
+      container.innerHTML = '';
+      const count = system === 'igcse' ? 3 : 2;
+      for (let i = 1; i <= count; i++) {
+        const label = document.createElement('label');
+        label.textContent = `Semester ${i} Score (%)`;
+        const input = document.createElement('input');
+        input.type = 'number';
+        input.min = 0;
+        input.max = 100;
+        input.id = `sem${i}`;
+        container.appendChild(label);
+        container.appendChild(input);
+      }
+    }
+
+    function toggleCourses() {
+      document.getElementById('courseHoursBox').style.display =
+        document.getElementById('courses').value === 'yes' ? 'block' : 'none';
+    }
+
+    function predict() {
+      const system = document.getElementById('system').value;
+      const semesters = system === 'igcse' ? 3 : 2;
+      let total = 0;
+      for (let i = 1; i <= semesters; i++) {
+        const val = Number(document.getElementById(`sem${i}`).value);
+        if (!val && val !== 0) { alert('Please fill all semester scores'); return; }
+        total += val;
+      }
+      let predicted = total / semesters;
+
+      const screen = Number(document.getElementById('screenTime').value || 0);
+      const course = document.getElementById('courses').value;
+      const courseHours = Number(document.getElementById('courseHours').value || 0);
+      const family = document.getElementById('family').value;
+
+      if (screen > 6) predicted -= 3;
+      else if (screen < 3) predicted += 2;
+      if (course === 'yes') {
+        if (courseHours >= 5) predicted += 3;
+        else if (courseHours >= 1) predicted += 1;
+      }
+      if (family === 'yes') predicted -= 2;
+      predicted = Math.max(0, Math.min(100, predicted));
+
+      let feedback = '';
+      if (predicted >= 85) feedback = 'Excellent performance. Maintain current routine.';
+      else if (predicted >= 70) feedback = 'Good performance. Improvement is possible with more focus.';
+      else feedback = 'Academic risk detected. Support is recommended.';
+
+      let advice = '';
+      if (screen > 6) advice += '• Reduce screen time gradually.\\n';
+      if (course === 'no' && predicted < 75) advice += '• Consider remedial classes or extra homework.\\n';
+      if (family === 'yes') advice += '• Provide emotional and family support.\\n';
+      advice += '• Create a structured daily study schedule.\\n';
+      advice += '• Encourage reading and offline learning activities.\\n';
+      advice += '• Monitor and reward progress to boost motivation.\\n';
+      advice += '• Ensure proper sleep and healthy lifestyle.\\n';
+      advice += '• Communicate regularly with teachers for support.\\n';
+
+      document.getElementById('result').style.display = 'block';
+      document.getElementById('result').textContent =
+        `Predicted Final Score: ${predicted.toFixed(2)}%\\n\\nParent Feedback:\\n${feedback}\\n\\nRecommendations:\\n${advice}`;
+    }
+
+    renderSemesters();
+  </script>
+</body>
+</html>
